@@ -18,12 +18,8 @@
         }
         .animate-float { animation: float 4s ease-in-out infinite; }
         
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.96) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .animate-fade-in { animation: fadeInMap 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeInMap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeInMap 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
@@ -57,7 +53,7 @@
         <div class="print:hidden mb-10">
             <div class="inline-flex items-center space-x-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-semibold mb-4">
                 <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                <span>Global Tax Compliance Engine v2.4</span>
+                <span>Global Tax Compliance Engine v2.5</span>
             </div>
             <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
                 Tax-Ready Invoicing for <span class="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Remote Pros</span>
@@ -133,8 +129,8 @@
             </div>
         </div>
 
-        <!-- Clean Print / PDF Invoice Template (Optimized for full width & no cutting) -->
-        <div id="invoice-print-area" class="hidden print:block bg-white text-slate-900 p-8 text-left max-w-xl mx-auto border border-slate-200 mt-6 rounded-2xl shadow-2xl" style="width: 190mm; box-sizing: border-box;">
+        <!-- Clean Print / PDF Invoice Template (Strictly Fixed Container for html2pdf) -->
+        <div id="invoice-print-area" class="hidden bg-white text-slate-900 p-8 text-left mx-auto border border-slate-200 rounded-2xl shadow-2xl" style="width: 700px; max-width: 100%; box-sizing: border-box;">
             <div class="flex justify-between items-start border-b border-slate-100 pb-6 mb-6">
                 <div>
                     <h1 class="text-3xl font-black text-indigo-600 tracking-wider">INVOICE</h1>
@@ -323,7 +319,7 @@
             element.classList.remove('hidden');
             
             const opt = {
-                margin:       [10, 10, 10, 10],
+                margin:       5,
                 filename:     'InvoSync-Compliance-Invoice.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
@@ -446,7 +442,11 @@
 
             const symbol = getCurrencySymbol(countryVal);
             renderInvoiceView(client, project, totalAmount, baseAmount, taxAmount, taxName, policyNote, countryText, symbol, dateStr);
-            window.print();
+            
+            // Trigger PDF download directly on detail inspect as well for convenience
+            setTimeout(() => {
+                downloadPDFInvoice();
+            }, 200);
         };
 
         async function checkUserSession() {
@@ -495,7 +495,7 @@
 
             if(countryVal === 'UK') {
                 taxRate = 0.20;
-                taxName = "VAT (20%)";
+                name = "VAT (20%)";
                 policyNote = "UK VAT-inclusive standard compliance policy applied.";
             } else if(countryVal === 'EU') {
                 taxRate = 0.19;
@@ -553,7 +553,7 @@
                     }
                 }
 
-                window.print();
+                downloadPDFInvoice();
             });
         }
     </script>
