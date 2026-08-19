@@ -18,8 +18,12 @@
         }
         .animate-float { animation: float 4s ease-in-out infinite; }
         
-        @keyframes fadeInMap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.96) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
         .animate-fade-in { animation: fadeInMap 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeInMap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
@@ -53,7 +57,7 @@
         <div class="print:hidden mb-10">
             <div class="inline-flex items-center space-x-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-semibold mb-4">
                 <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                <span>Global Tax Compliance Engine v2.5</span>
+                <span>Global Tax Compliance Engine v2.4</span>
             </div>
             <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
                 Tax-Ready Invoicing for <span class="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Remote Pros</span>
@@ -130,7 +134,7 @@
         </div>
 
         <!-- Clean Print / PDF Invoice Template -->
-        <div id="invoice-print-area" class="hidden bg-white text-slate-900 p-8 text-left mx-auto border border-slate-200 rounded-2xl shadow-2xl" style="width: 700px; max-width: 100%; box-sizing: border-box;">
+        <div id="invoice-print-area" class="hidden print:block bg-white text-slate-900 p-10 text-left max-w-2xl mx-auto border border-slate-200 mt-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-start border-b border-slate-100 pb-6 mb-6">
                 <div>
                     <h1 class="text-3xl font-black text-indigo-600 tracking-wider">INVOICE</h1>
@@ -316,23 +320,18 @@
 
         function downloadPDFInvoice() {
             const element = document.getElementById('invoice-print-area');
-            
-            // Temporary show element off-screen to prevent blank PDF generation
-            element.style.position = "absolute";
-            element.style.left = "-9999px";
             element.classList.remove('hidden');
             
             const opt = {
                 margin:       10,
                 filename:     'InvoSync-Compliance-Invoice.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             html2pdf().from(element).set(opt).save().then(() => {
                 element.classList.add('hidden');
-                element.style.position = "static";
             });
         }
 
@@ -340,9 +339,7 @@
             downloadPdfBtn.addEventListener('click', () => {
                 const invData = prepareInvoiceDataAndRender();
                 if(invData) {
-                    setTimeout(() => {
-                        downloadPDFInvoice();
-                    }, 400);
+                    downloadPDFInvoice();
                 }
             });
         }
@@ -449,10 +446,7 @@
 
             const symbol = getCurrencySymbol(countryVal);
             renderInvoiceView(client, project, totalAmount, baseAmount, taxAmount, taxName, policyNote, countryText, symbol, dateStr);
-            
-            setTimeout(() => {
-                downloadPDFInvoice();
-            }, 400);
+            window.print();
         };
 
         async function checkUserSession() {
@@ -559,9 +553,7 @@
                     }
                 }
 
-                setTimeout(() => {
-                    downloadPDFInvoice();
-                }, 400);
+                window.print();
             });
         }
     </script>
