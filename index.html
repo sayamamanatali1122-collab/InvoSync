@@ -316,18 +316,23 @@
 
         function downloadPDFInvoice() {
             const element = document.getElementById('invoice-print-area');
+            
+            // Temporary show element off-screen to prevent blank PDF generation
+            element.style.position = "absolute";
+            element.style.left = "-9999px";
             element.classList.remove('hidden');
             
             const opt = {
-                margin:       5,
+                margin:       10,
                 filename:     'InvoSync-Compliance-Invoice.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             html2pdf().from(element).set(opt).save().then(() => {
                 element.classList.add('hidden');
+                element.style.position = "static";
             });
         }
 
@@ -335,7 +340,9 @@
             downloadPdfBtn.addEventListener('click', () => {
                 const invData = prepareInvoiceDataAndRender();
                 if(invData) {
-                    downloadPDFInvoice();
+                    setTimeout(() => {
+                        downloadPDFInvoice();
+                    }, 400);
                 }
             });
         }
@@ -445,7 +452,7 @@
             
             setTimeout(() => {
                 downloadPDFInvoice();
-            }, 200);
+            }, 400);
         };
 
         async function checkUserSession() {
@@ -552,7 +559,9 @@
                     }
                 }
 
-                downloadPDFInvoice();
+                setTimeout(() => {
+                    downloadPDFInvoice();
+                }, 400);
             });
         }
     </script>
