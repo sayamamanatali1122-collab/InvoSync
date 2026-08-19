@@ -4,34 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InvoSync - Global Invoicing & Compliance for Remote Workers</title>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- html2pdf Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <!-- Tailwind Custom Animations & Styles -->
     <style>
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
+            0%, 100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
         }
-        .animate-float { animation: float 4s ease-in-out infinite; }
-        
+
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
         @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.96) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
-        .animate-fade-in { animation: fadeInMap 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeInMap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .animate-fade-in {
+            animation: fadeInMap 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInMap {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* PDF rendering */
+        #invoice-print-area.pdf-rendering {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 794px !important;
+            max-width: 794px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            z-index: 99999 !important;
+        }
     </style>
 </head>
+
 <body class="bg-slate-950 text-slate-100 font-sans flex flex-col min-h-screen selection:bg-indigo-500 selection:text-white">
 
     <!-- Ambient Glow Background Effects -->
@@ -39,523 +100,2101 @@
 
     <!-- Header / Navigation -->
     <header class="w-full bg-slate-900/60 backdrop-blur-xl border-b border-slate-800/80 py-4 px-6 md:px-12 flex justify-between items-center fixed top-0 z-40 shadow-xl print:hidden">
+
         <div class="flex items-center space-x-2">
-            <div class="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white font-black text-lg">IS</div>
-            <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">InvoSync</span>
+            <div class="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white font-black text-lg">
+                IS
+            </div>
+
+            <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">
+                InvoSync
+            </span>
         </div>
+
         <div class="flex items-center space-x-4" id="auth-nav">
+
             <span id="user-email" class="text-xs font-semibold text-slate-400 hidden sm:inline-block mr-1"></span>
-            <button id="login-btn-trigger" type="button" class="text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer px-3 py-2">Login</button>
-            <button id="signup-btn-trigger" type="button" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-indigo-500 transition-all hover:scale-105 shadow-lg shadow-indigo-600/30 cursor-pointer">Get Started Free</button>
+
+            <button
+                id="login-btn-trigger"
+                type="button"
+                class="text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer px-3 py-2">
+                Login
+            </button>
+
+            <button
+                id="signup-btn-trigger"
+                type="button"
+                class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-indigo-500 transition-all hover:scale-105 shadow-lg shadow-indigo-600/30 cursor-pointer">
+                Get Started Free
+            </button>
+
         </div>
     </header>
 
+
     <!-- Main Section -->
     <main class="flex-grow max-w-2xl w-full mx-auto pt-36 pb-20 px-6 text-center animate-fade-in relative z-10">
-        
+
         <!-- Hero Section -->
         <div class="print:hidden mb-10">
+
             <div class="inline-flex items-center space-x-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-semibold mb-4">
+
                 <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                <span>Global Tax Compliance Engine v2.4</span>
+
+                <span>
+                    Global Tax Compliance Engine v2.4
+                </span>
+
             </div>
+
             <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
-                Tax-Ready Invoicing for <span class="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Remote Pros</span>
+
+                Tax-Ready Invoicing for
+
+                <span class="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                    Remote Pros
+                </span>
+
             </h1>
+
             <p class="mt-3 text-sm md:text-base text-slate-400 max-w-lg mx-auto font-medium">
                 Automated multi-jurisdiction tax deduction & instant PDF generator tailored for cross-border freelancing.
             </p>
+
         </div>
 
-        <!-- Dashboard Analytics Widget (Shown after login) -->
-        <div id="stats-container" class="max-w-xl mx-auto hidden print:hidden grid grid-cols-2 gap-4 mb-8">
+
+        <!-- Dashboard Analytics Widget -->
+        <div
+            id="stats-container"
+            class="max-w-xl mx-auto hidden grid grid-cols-2 gap-4 mb-8 print:hidden">
+
             <div class="bg-slate-900/80 backdrop-blur-md p-5 rounded-2xl border border-slate-800 shadow-xl text-left transition hover:border-slate-700">
-                <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Total Invoices</p>
-                <p id="stat-total-count" class="text-3xl font-black text-white mt-1">0</p>
+
+                <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">
+                    Total Invoices
+                </p>
+
+                <p id="stat-total-count" class="text-3xl font-black text-white mt-1">
+                    0
+                </p>
+
             </div>
+
             <div class="bg-gradient-to-br from-indigo-600 to-violet-600 p-5 rounded-2xl shadow-xl shadow-indigo-600/20 text-left">
-                <p class="text-[10px] font-extrabold text-indigo-200 uppercase tracking-widest">Total Earnings</p>
-                <p id="stat-total-earnings" class="text-3xl font-black text-white mt-1">$0</p>
+
+                <p class="text-[10px] font-extrabold text-indigo-200 uppercase tracking-widest">
+                    Total Earnings
+                </p>
+
+                <p id="stat-total-earnings" class="text-3xl font-black text-white mt-1">
+                    $0
+                </p>
+
             </div>
+
         </div>
+
 
         <!-- Invoice Creator Card -->
-        <div id="app-container" class="bg-slate-900/80 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl shadow-indigo-950/50 border border-slate-800/80 max-w-xl mx-auto text-left print:hidden transition-all duration-300 hover:border-slate-700">
+        <div
+            id="app-container"
+            class="bg-slate-900/80 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl shadow-indigo-950/50 border border-slate-800/80 max-w-xl mx-auto text-left print:hidden transition-all duration-300 hover:border-slate-700">
+
             <h2 class="text-xl font-extrabold text-white mb-6 flex items-center justify-between">
-                <span>Create New Invoice</span>
-                <span class="text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-lg">Instant Math</span>
+
+                <span>
+                    Create New Invoice
+                </span>
+
+                <span class="text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-lg">
+                    Instant Math
+                </span>
+
             </h2>
-            
+
+
             <div class="space-y-4">
+
+                <!-- Country -->
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Compliance Jurisdiction</label>
-                    <select id="country" class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
-                        <option value="US">🇺🇸 US Client - B2B Cross-Border Export (0% Tax)</option>
-                        <option value="UK">🇬🇧 UK Client - Standard VAT Inclusive (20%)</option>
-                        <option value="EU">🇪🇺 EU Client - VAT Reverse Charge / Inclusive (19%)</option>
-                        <option value="PK">🇵🇰 Pakistan Domestic - Services GST Inclusive (16%)</option>
-                        <option value="OTHER">🌍 Global Rest of World - Standard Tax (5%)</option>
+
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Compliance Jurisdiction
+                    </label>
+
+                    <select
+                        id="country"
+                        class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
+                        <option value="US">
+                            🇺🇸 US Client - B2B Cross-Border Export (0% Tax)
+                        </option>
+
+                        <option value="UK">
+                            🇬🇧 UK Client - Standard VAT Inclusive (20%)
+                        </option>
+
+                        <option value="EU">
+                            🇪🇺 EU Client - VAT Reverse Charge / Inclusive (19%)
+                        </option>
+
+                        <option value="PK">
+                            🇵🇰 Pakistan Domestic - Services GST Inclusive (16%)
+                        </option>
+
+                        <option value="OTHER">
+                            🌍 Global Rest of World - Standard Tax (5%)
+                        </option>
+
                     </select>
+
                 </div>
 
+
+                <!-- Client -->
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Client Name / Enterprise</label>
-                    <input type="text" id="clientName" placeholder="e.g. Stripe Inc." class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Client Name / Enterprise
+                    </label>
+
+                    <input
+                        type="text"
+                        id="clientName"
+                        placeholder="e.g. Stripe Inc."
+                        class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
                 </div>
 
+
+                <!-- Project -->
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Project / Description</label>
-                    <input type="text" id="projectName" placeholder="e.g. Senior Frontend Architecture" class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Project / Description
+                    </label>
+
+                    <input
+                        type="text"
+                        id="projectName"
+                        placeholder="e.g. Senior Frontend Architecture"
+                        class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
                 </div>
 
+
+                <!-- Amount -->
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Agreed Total Budget</label>
-                    <input type="number" id="amount" placeholder="e.g. 3500" class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Agreed Total Budget
+                    </label>
+
+                    <input
+                        type="number"
+                        id="amount"
+                        placeholder="e.g. 3500"
+                        class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
                 </div>
 
+
+                <!-- Buttons -->
                 <div class="flex gap-3 pt-3">
-                    <button id="generate-invoice-btn" type="button" class="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3.5 px-4 rounded-xl hover:opacity-95 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-indigo-600/30 cursor-pointer text-center text-sm flex items-center justify-center space-x-2">
-                        <span>Save & Generate Invoice</span>
+
+                    <button
+                        id="generate-invoice-btn"
+                        type="button"
+                        class="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3.5 px-4 rounded-xl hover:opacity-95 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-indigo-600/30 cursor-pointer text-center text-sm flex items-center justify-center space-x-2">
+
+                        <span>
+                            Save & Generate Invoice
+                        </span>
+
                     </button>
-                    <button id="download-pdf-btn" type="button" class="bg-slate-800 text-slate-200 px-5 py-3.5 rounded-xl font-bold hover:bg-slate-700 transition cursor-pointer text-sm border border-slate-700">
+
+
+                    <button
+                        id="download-pdf-btn"
+                        type="button"
+                        class="bg-slate-800 text-slate-200 px-5 py-3.5 rounded-xl font-bold hover:bg-slate-700 transition cursor-pointer text-sm border border-slate-700">
+
                         Export PDF
+
                     </button>
+
                 </div>
+
             </div>
+
         </div>
+
 
         <!-- History Records Widget -->
-        <div id="history-container" class="mt-8 bg-slate-900/80 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl shadow-indigo-950/50 border border-slate-800/80 max-w-xl mx-auto text-left print:hidden">
-            <h3 class="text-lg font-extrabold text-white mb-1">Invoice Archive</h3>
-            <p class="text-xs text-slate-400 mb-5">Click any record to load, inspect, or print/download directly.</p>
-            <div id="invoice-history-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
-                <p class="text-xs font-medium text-slate-500">Please sign in to access cloud-synced invoice archive.</p>
+        <div
+            id="history-container"
+            class="mt-8 bg-slate-900/80 backdrop-blur-xl p-6 md:p-10 rounded-3xl shadow-2xl shadow-indigo-950/50 border border-slate-800/80 max-w-xl mx-auto text-left print:hidden">
+
+            <h3 class="text-lg font-extrabold text-white mb-1">
+                Invoice Archive
+            </h3>
+
+            <p class="text-xs text-slate-400 mb-5">
+                Click any record to load, inspect, or print/download directly.
+            </p>
+
+            <div
+                id="invoice-history-list"
+                class="space-y-3 max-h-72 overflow-y-auto pr-1">
+
+                <p class="text-xs font-medium text-slate-500">
+                    Please sign in to access cloud-synced invoice archive.
+                </p>
+
             </div>
+
         </div>
 
-        <!-- Clean Print / PDF Invoice Template -->
-        <div id="invoice-print-area" class="hidden print:block bg-white text-slate-900 p-10 text-left max-w-2xl mx-auto border border-slate-200 mt-6 rounded-3xl shadow-2xl">
+
+        <!-- Clean Invoice PDF Area -->
+        <!-- print:block removed because it can conflict with html2canvas -->
+        <div
+            id="invoice-print-area"
+            class="hidden bg-white text-slate-900 p-10 text-left max-w-2xl mx-auto border border-slate-200 mt-6 rounded-3xl shadow-2xl">
+
+            <!-- Invoice Header -->
             <div class="flex justify-between items-start border-b border-slate-100 pb-6 mb-6">
+
                 <div>
-                    <h1 class="text-3xl font-black text-indigo-600 tracking-wider">INVOICE</h1>
-                    <p class="text-xs text-slate-400 mt-1 font-semibold">Global Tax-Compliant Professional Document</p>
+
+                    <h1 class="text-3xl font-black text-indigo-600 tracking-wider">
+                        INVOICE
+                    </h1>
+
+                    <p class="text-xs text-slate-400 mt-1 font-semibold">
+                        Global Tax-Compliant Professional Document
+                    </p>
+
                 </div>
+
                 <div class="text-right">
-                    <p class="text-sm font-bold text-slate-800" id="inv-country-name">Jurisdiction</p>
-                    <p class="text-xs text-slate-500 mt-1 font-medium">Date: <span id="inv-date"></span></p>
+
+                    <p
+                        class="text-sm font-bold text-slate-800"
+                        id="inv-country-name">
+                        Jurisdiction
+                    </p>
+
+                    <p class="text-xs text-slate-500 mt-1 font-medium">
+                        Date:
+                        <span id="inv-date"></span>
+                    </p>
+
                 </div>
+
             </div>
 
+
+            <!-- From / To -->
             <div class="grid grid-cols-2 gap-8 mb-8">
+
                 <div>
-                    <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider mb-1">From:</p>
-                    <p class="text-sm font-bold text-slate-800">Remote Professional</p>
-                    <p class="text-xs text-slate-500 font-medium">Verified via InvoSync Cloud</p>
+
+                    <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider mb-1">
+                        From:
+                    </p>
+
+                    <p class="text-sm font-bold text-slate-800">
+                        Remote Professional
+                    </p>
+
+                    <p class="text-xs text-slate-500 font-medium">
+                        Verified via InvoSync Cloud
+                    </p>
+
                 </div>
+
+
                 <div>
-                    <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider mb-1">Billed To:</p>
-                    <p class="text-sm font-bold text-slate-800" id="inv-client">-</p>
+
+                    <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider mb-1">
+                        Billed To:
+                    </p>
+
+                    <p
+                        class="text-sm font-bold text-slate-800"
+                        id="inv-client">
+                        -
+                    </p>
+
                 </div>
+
             </div>
 
+
+            <!-- Invoice Table -->
             <table class="w-full mb-8 text-left border-collapse">
+
                 <thead>
+
                     <tr class="border-b border-slate-200 text-[10px] text-slate-400 uppercase font-extrabold">
-                        <th class="py-2">Description</th>
-                        <th class="py-2 text-right">Amount</th>
+
+                        <th class="py-2">
+                            Description
+                        </th>
+
+                        <th class="py-2 text-right">
+                            Amount
+                        </th>
+
                     </tr>
+
                 </thead>
+
                 <tbody>
+
                     <tr class="border-b border-slate-100">
-                        <td class="py-4 text-sm font-bold text-slate-800" id="inv-project">-</td>
-                        <td class="py-4 text-sm font-black text-slate-800 text-right" id="inv-net-amount">$0.00</td>
+
+                        <td
+                            class="py-4 text-sm font-bold text-slate-800"
+                            id="inv-project">
+                            -
+                        </td>
+
+                        <td
+                            class="py-4 text-sm font-black text-slate-800 text-right"
+                            id="inv-net-amount">
+                            $0.00
+                        </td>
+
                     </tr>
+
                 </tbody>
+
             </table>
 
+
+            <!-- Invoice Totals -->
             <div class="flex justify-end mb-8">
+
                 <div class="w-72 space-y-2 text-sm font-medium">
+
                     <div class="flex justify-between text-slate-600">
-                        <span>Base Amount:</span>
-                        <span id="inv-base-val">$0.00</span>
+
+                        <span>
+                            Base Amount:
+                        </span>
+
+                        <span id="inv-base-val">
+                            $0.00
+                        </span>
+
                     </div>
+
+
                     <div class="flex justify-between text-slate-600">
-                        <span id="inv-tax-label">Tax Deduction:</span>
-                        <span id="inv-tax-val">$0.00</span>
+
+                        <span id="inv-tax-label">
+                            Tax Deduction:
+                        </span>
+
+                        <span id="inv-tax-val">
+                            $0.00
+                        </span>
+
                     </div>
+
+
                     <div class="flex justify-between text-base font-black text-slate-900 border-t border-slate-200 pt-3">
-                        <span>Total Payable:</span>
-                        <span id="inv-total-val" class="text-indigo-600">$0.00</span>
+
+                        <span>
+                            Total Payable:
+                        </span>
+
+                        <span
+                            id="inv-total-val"
+                            class="text-indigo-600">
+                            $0.00
+                        </span>
+
                     </div>
+
                 </div>
+
             </div>
 
+
+            <!-- Footer -->
             <div class="border-t border-slate-100 pt-6 text-center text-xs text-slate-400 font-medium">
-                <p id="inv-policy-note">Thank you for your business! This is a computer-generated tax compliance record.</p>
+
+                <p id="inv-policy-note">
+                    Thank you for your business! This is a computer-generated tax compliance record.
+                </p>
+
             </div>
+
         </div>
+
     </main>
 
-    <!-- Auth Modal Overlay -->
-    <div id="auth-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex justify-center items-center z-50 animate-fade-in">
+
+    <!-- Auth Modal -->
+    <div
+        id="auth-modal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex justify-center items-center z-50 animate-fade-in">
+
         <div class="bg-slate-900 p-8 rounded-3xl max-w-sm w-full shadow-2xl relative border border-slate-800 mx-4">
-            <button id="close-modal-btn" type="button" class="absolute top-5 right-5 text-slate-500 hover:text-slate-300 font-bold cursor-pointer text-sm">✕</button>
-            <h3 id="modal-title" class="text-xl font-extrabold text-white mb-6">Welcome to InvoSync</h3>
+
+            <button
+                id="close-modal-btn"
+                type="button"
+                class="absolute top-5 right-5 text-slate-500 hover:text-slate-300 font-bold cursor-pointer text-sm">
+                ✕
+            </button>
+
+            <h3
+                id="modal-title"
+                class="text-xl font-extrabold text-white mb-6">
+                Welcome to InvoSync
+            </h3>
+
+
             <div class="space-y-4">
+
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
-                    <input type="email" id="auth-email" placeholder="name@domain.com" class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Email Address
+                    </label>
+
+                    <input
+                        type="email"
+                        id="auth-email"
+                        placeholder="name@domain.com"
+                        class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
                 </div>
+
+
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
-                    <input type="password" id="auth-password" placeholder="••••••••" class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="auth-password"
+                        placeholder="••••••••"
+                        class="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium text-slate-300 text-sm">
+
                 </div>
-                <button id="auth-submit-btn" type="button" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30 cursor-pointer text-sm mt-2">Proceed</button>
+
+
+                <button
+                    id="auth-submit-btn"
+                    type="button"
+                    class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30 cursor-pointer text-sm mt-2">
+                    Proceed
+                </button>
+
             </div>
+
         </div>
+
     </div>
 
+
     <!-- Footer -->
-    <footer class="w-full bg-slate-950 border-t border-slate-900 py-6 px-6 text-center text-xs text-slate-500 font-medium mt-12 print:hidden">
-        <p>&copy; 2026 InvoSync. Global Invoicing & Compliance Engine.</p>
+    <footer
+        class="w-full bg-slate-950 border-t border-slate-900 py-6 px-6 text-center text-xs text-slate-500 font-medium mt-12 print:hidden">
+
+        <p>
+            &copy; 2026 InvoSync. Global Invoicing & Compliance Engine.
+        </p>
+
     </footer>
 
-    <!-- App Logic Script -->
+
+    <!-- App Logic -->
     <script>
-        const SUPABASE_URL = 'https://gxnkxeuwgzjtkfqnlbco.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_Iab831IQHRt1CB-5SrWX8A_Y8shYQ0-';
-        
+
+        /* =========================================================
+           SUPABASE CONFIGURATION
+        ========================================================= */
+
+        const SUPABASE_URL =
+            'https://gxnkxeuwgzjtkfqnlbco.supabase.co';
+
+        const SUPABASE_ANON_KEY =
+            'sb_publishable_Iab831IQHRt1CB-5SrWX8A_Y8shYQ0-';
+
+
         let supabaseClient = null;
+
         try {
+
             if (window.supabase) {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+                supabaseClient =
+                    window.supabase.createClient(
+                        SUPABASE_URL,
+                        SUPABASE_ANON_KEY
+                    );
+
             }
-        } catch(e) {
-            console.error("Supabase config notice:", e);
+
+        } catch (e) {
+
+            console.error(
+                "Supabase config notice:",
+                e
+            );
+
         }
+
+
+        /* =========================================================
+           AUTH
+        ========================================================= */
 
         let authMode = 'login';
 
-        function openAuthModal(mode) {
-            authMode = mode;
-            const titleElem = document.getElementById('modal-title');
-            const submitBtn = document.getElementById('auth-submit-btn');
-            const modal = document.getElementById('auth-modal');
 
-            if(titleElem) titleElem.innerText = mode === 'login' ? 'Login to InvoSync' : 'Create Free Account';
-            if(submitBtn) submitBtn.innerText = mode === 'login' ? 'Secure Login' : 'Complete Sign Up';
-            if(modal) modal.classList.remove('hidden');
+        function openAuthModal(mode) {
+
+            authMode = mode;
+
+            const titleElem =
+                document.getElementById('modal-title');
+
+            const submitBtn =
+                document.getElementById('auth-submit-btn');
+
+            const modal =
+                document.getElementById('auth-modal');
+
+
+            if (titleElem) {
+
+                titleElem.innerText =
+                    mode === 'login'
+                        ? 'Login to InvoSync'
+                        : 'Create Free Account';
+
+            }
+
+
+            if (submitBtn) {
+
+                submitBtn.innerText =
+                    mode === 'login'
+                        ? 'Secure Login'
+                        : 'Complete Sign Up';
+
+            }
+
+
+            if (modal) {
+
+                modal.classList.remove('hidden');
+
+            }
+
         }
+
 
         function closeAuthModal() {
-            const modal = document.getElementById('auth-modal');
-            if(modal) modal.classList.add('hidden');
+
+            const modal =
+                document.getElementById('auth-modal');
+
+            if (modal) {
+
+                modal.classList.add('hidden');
+
+            }
+
         }
 
-        const loginTrigger = document.getElementById('login-btn-trigger');
-        const signupTrigger = document.getElementById('signup-btn-trigger');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const authSubmitBtn = document.getElementById('auth-submit-btn');
-        const generateInvoiceBtn = document.getElementById('generate-invoice-btn');
-        const downloadPdfBtn = document.getElementById('download-pdf-btn');
 
-        if(loginTrigger) loginTrigger.addEventListener('click', () => openAuthModal('login'));
-        if(signupTrigger) signupTrigger.addEventListener('click', () => openAuthModal('signup'));
-        if(closeModalBtn) closeModalBtn.addEventListener('click', closeAuthModal);
+        const loginTrigger =
+            document.getElementById('login-btn-trigger');
 
-        if(authSubmitBtn) {
-            authSubmitBtn.addEventListener('click', async () => {
-                const email = document.getElementById('auth-email').value;
-                const password = document.getElementById('auth-password').value;
+        const signupTrigger =
+            document.getElementById('signup-btn-trigger');
 
-                if(!email || !password) {
-                    alert('Please enter valid login details.');
-                    return;
-                }
+        const closeModalBtn =
+            document.getElementById('close-modal-btn');
 
-                if(!supabaseClient) {
-                    alert('Supabase client connection failure.');
-                    return;
-                }
+        const authSubmitBtn =
+            document.getElementById('auth-submit-btn');
 
-                if(authMode === 'signup') {
-                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
-                    if(error) alert(error.message);
-                    else {
-                        alert('Registration complete! Check email for verification link.');
-                        closeAuthModal();
-                    }
-                } else {
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                    if(error) alert(error.message);
-                    else {
-                        alert('Welcome back!');
-                        checkUserSession();
-                        closeAuthModal();
-                    }
-                }
-            });
+        const generateInvoiceBtn =
+            document.getElementById('generate-invoice-btn');
+
+        const downloadPdfBtn =
+            document.getElementById('download-pdf-btn');
+
+
+        if (loginTrigger) {
+
+            loginTrigger.addEventListener(
+                'click',
+                () => openAuthModal('login')
+            );
+
         }
+
+
+        if (signupTrigger) {
+
+            signupTrigger.addEventListener(
+                'click',
+                () => openAuthModal('signup')
+            );
+
+        }
+
+
+        if (closeModalBtn) {
+
+            closeModalBtn.addEventListener(
+                'click',
+                closeAuthModal
+            );
+
+        }
+
+
+        /* =========================================================
+           LOGIN / SIGNUP
+        ========================================================= */
+
+        if (authSubmitBtn) {
+
+            authSubmitBtn.addEventListener(
+                'click',
+                async () => {
+
+                    const email =
+                        document.getElementById('auth-email').value.trim();
+
+                    const password =
+                        document.getElementById('auth-password').value;
+
+
+                    if (!email || !password) {
+
+                        alert(
+                            'Please enter valid login details.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (!supabaseClient) {
+
+                        alert(
+                            'Supabase client connection failure.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (authMode === 'signup') {
+
+                        const {
+                            data,
+                            error
+                        } =
+                            await supabaseClient.auth.signUp({
+                                email,
+                                password
+                            });
+
+
+                        if (error) {
+
+                            alert(error.message);
+
+                        } else {
+
+                            alert(
+                                'Registration complete! Check email for verification link.'
+                            );
+
+                            closeAuthModal();
+
+                        }
+
+                    } else {
+
+                        const {
+                            data,
+                            error
+                        } =
+                            await supabaseClient.auth.signInWithPassword({
+                                email,
+                                password
+                            });
+
+
+                        if (error) {
+
+                            alert(error.message);
+
+                        } else {
+
+                            alert('Welcome back!');
+
+                            checkUserSession();
+
+                            closeAuthModal();
+
+                        }
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           CURRENCY
+        ========================================================= */
 
         function getCurrencySymbol(policy) {
+
             if (policy === 'UK') return '£';
+
             if (policy === 'EU') return '€';
+
             if (policy === 'PK') return '₨ ';
+
             return '$';
+
         }
 
-        function renderInvoiceView(client, project, totalAmount, baseAmount, taxAmount, taxName, policyNote, countryText, symbol, dateStr) {
-            document.getElementById('inv-country-name').innerText = countryText;
-            document.getElementById('inv-date').innerText = dateStr || new Date().toLocaleDateString();
-            document.getElementById('inv-client').innerText = client;
-            document.getElementById('inv-project').innerText = project;
-            
-            document.getElementById('inv-net-amount').innerText = symbol + totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('inv-base-val').innerText = symbol + baseAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('inv-tax-label').innerText = taxName + " (Extracted):";
-            document.getElementById('inv-tax-val').innerText = symbol + taxAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('inv-total-val').innerText = symbol + totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('inv-policy-note').innerText = policyNote;
+
+        /* =========================================================
+           RENDER INVOICE
+        ========================================================= */
+
+        function renderInvoiceView(
+            client,
+            project,
+            totalAmount,
+            baseAmount,
+            taxAmount,
+            taxName,
+            policyNote,
+            countryText,
+            symbol,
+            dateStr
+        ) {
+
+            document.getElementById(
+                'inv-country-name'
+            ).innerText = countryText;
+
+
+            document.getElementById(
+                'inv-date'
+            ).innerText =
+                dateStr ||
+                new Date().toLocaleDateString();
+
+
+            document.getElementById(
+                'inv-client'
+            ).innerText = client;
+
+
+            document.getElementById(
+                'inv-project'
+            ).innerText = project;
+
+
+            document.getElementById(
+                'inv-net-amount'
+            ).innerText =
+                symbol +
+                Number(totalAmount).toLocaleString(
+                    undefined,
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
+
+
+            document.getElementById(
+                'inv-base-val'
+            ).innerText =
+                symbol +
+                Number(baseAmount).toLocaleString(
+                    undefined,
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
+
+
+            document.getElementById(
+                'inv-tax-label'
+            ).innerText =
+                taxName + " (Extracted):";
+
+
+            document.getElementById(
+                'inv-tax-val'
+            ).innerText =
+                symbol +
+                Number(taxAmount).toLocaleString(
+                    undefined,
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
+
+
+            document.getElementById(
+                'inv-total-val'
+            ).innerText =
+                symbol +
+                Number(totalAmount).toLocaleString(
+                    undefined,
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
+
+
+            document.getElementById(
+                'inv-policy-note'
+            ).innerText =
+                policyNote;
+
         }
 
-        function downloadPDFInvoice() {
-            const element = document.getElementById('invoice-print-area');
-            element.classList.remove('hidden');
-            
-            const opt = {
-                margin:       10,
-                filename:     'InvoSync-Compliance-Invoice.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+
+        /* =========================================================
+           FIXED PDF GENERATION
+        ========================================================= */
+
+        async function downloadPDFInvoice() {
+
+            const element =
+                document.getElementById(
+                    'invoice-print-area'
+                );
+
+
+            if (!element) {
+
+                alert(
+                    'Invoice area not found.'
+                );
+
+                return;
+
+            }
+
+
+            if (typeof html2pdf === 'undefined') {
+
+                alert(
+                    'PDF library failed to load. Please refresh the page and try again.'
+                );
+
+                return;
+
+            }
+
+
+            const originalClass =
+                element.className;
+
+
+            const originalStyle =
+                element.getAttribute('style');
+
+
+            try {
+
+                /*
+                    Temporarily make invoice visible.
+                    This is important because html2canvas
+                    cannot reliably render display:none elements.
+                */
+
+                element.classList.remove('hidden');
+
+                element.classList.add(
+                    'pdf-rendering'
+                );
+
+
+                element.style.display =
+                    'block';
+
+                element.style.visibility =
+                    'visible';
+
+                element.style.opacity =
+                    '1';
+
+                element.style.position =
+                    'absolute';
+
+                element.style.left =
+                    '0';
+
+                element.style.top =
+                    '0';
+
+                element.style.width =
+                    '794px';
+
+                element.style.maxWidth =
+                    '794px';
+
+                element.style.backgroundColor =
+                    '#ffffff';
+
+                element.style.zIndex =
+                    '99999';
+
+
+                /*
+                    Give browser time to render
+                    fonts/layout before screenshot.
+                */
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(
+                            resolve,
+                            500
+                        )
+                );
+
+
+                /*
+                    Wait for fonts.
+                */
+
+                if (
+                    document.fonts &&
+                    document.fonts.ready
+                ) {
+
+                    await document.fonts.ready;
+
+                }
+
+
+                const options = {
+
+                    margin: [
+                        8,
+                        8,
+                        8,
+                        8
+                    ],
+
+                    filename:
+                        'InvoSync-Invoice.pdf',
+
+                    image: {
+                        type: 'jpeg',
+                        quality: 0.98
+                    },
+
+                    html2canvas: {
+
+                        scale: 2,
+
+                        useCORS: true,
+
+                        allowTaint: true,
+
+                        backgroundColor:
+                            '#ffffff',
+
+                        logging: false,
+
+                        imageTimeout: 15000,
+
+                        scrollX: 0,
+
+                        scrollY: 0
+
+                    },
+
+                    jsPDF: {
+
+                        unit: 'mm',
+
+                        format: 'a4',
+
+                        orientation:
+                            'portrait',
+
+                        compress: true
+
+                    },
+
+                    pagebreak: {
+
+                        mode: [
+                            'avoid-all',
+                            'css',
+                            'legacy'
+                        ]
+
+                    }
+
+                };
+
+
+                /*
+                    Generate PDF
+                */
+
+                await html2pdf()
+                    .set(options)
+                    .from(element)
+                    .save();
+
+
+            } catch (error) {
+
+                console.error(
+                    'PDF generation error:',
+                    error
+                );
+
+
+                alert(
+                    'PDF generate nahi ho saki. Please try again.'
+                );
+
+
+            } finally {
+
+                /*
+                    Restore invoice element
+                    to its original state.
+                */
+
+                element.className =
+                    originalClass;
+
+
+                if (
+                    originalStyle !== null
+                ) {
+
+                    element.setAttribute(
+                        'style',
+                        originalStyle
+                    );
+
+                } else {
+
+                    element.removeAttribute(
+                        'style'
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        /* =========================================================
+           EXPORT PDF BUTTON
+        ========================================================= */
+
+        if (downloadPdfBtn) {
+
+            downloadPdfBtn.addEventListener(
+                'click',
+                async () => {
+
+                    const invData =
+                        prepareInvoiceDataAndRender();
+
+
+                    if (!invData) {
+
+                        return;
+
+                    }
+
+
+                    /*
+                        Generate PDF
+                    */
+
+                    await downloadPDFInvoice();
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           DELETE INVOICE
+        ========================================================= */
+
+        window.deleteInvoice =
+            async function (
+                event,
+                id
+            ) {
+
+                event.stopPropagation();
+
+
+                if (
+                    !confirm(
+                        'Delete this invoice record?'
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                if (!supabaseClient) {
+
+                    alert(
+                        'Supabase connection unavailable.'
+                    );
+
+                    return;
+
+                }
+
+
+                const {
+                    error
+                } =
+                    await supabaseClient
+                        .from('invoices')
+                        .delete()
+                        .eq('id', id);
+
+
+                if (error) {
+
+                    alert(
+                        'Deletion error: ' +
+                        error.message
+                    );
+
+                } else {
+
+                    loadInvoiceHistory();
+
+                }
+
             };
 
-            html2pdf().from(element).set(opt).save().then(() => {
-                element.classList.add('hidden');
-            });
-        }
 
-        if(downloadPdfBtn) {
-            downloadPdfBtn.addEventListener('click', () => {
-                const invData = prepareInvoiceDataAndRender();
-                if(invData) {
-                    downloadPDFInvoice();
-                }
-            });
-        }
-
-        window.deleteInvoice = async function(event, id) {
-            event.stopPropagation();
-            if(!confirm('Delete this invoice record?')) return;
-
-            const { error } = await supabaseClient.from('invoices').delete().eq('id', id);
-            if(error) {
-                alert('Deletion error: ' + error.message);
-            } else {
-                loadInvoiceHistory();
-            }
-        }
+        /* =========================================================
+           LOAD INVOICE HISTORY
+        ========================================================= */
 
         async function loadInvoiceHistory() {
-            const historyListElem = document.getElementById('invoice-history-list');
-            const statsContainer = document.getElementById('stats-container');
-            const totalCountElem = document.getElementById('stat-total-count');
-            const totalEarningsElem = document.getElementById('stat-total-earnings');
 
-            if (!historyListElem || !supabaseClient) return;
+            const historyListElem =
+                document.getElementById(
+                    'invoice-history-list'
+                );
 
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                historyListElem.innerHTML = `<p class="text-xs font-medium text-slate-500">Sign in to view invoice archives.</p>`;
-                if(statsContainer) statsContainer.classList.add('hidden');
+            const statsContainer =
+                document.getElementById(
+                    'stats-container'
+                );
+
+            const totalCountElem =
+                document.getElementById(
+                    'stat-total-count'
+                );
+
+            const totalEarningsElem =
+                document.getElementById(
+                    'stat-total-earnings'
+                );
+
+
+            if (
+                !historyListElem ||
+                !supabaseClient
+            ) {
+
                 return;
+
             }
 
-            const { data, error } = await supabaseClient
-                .from('invoices')
-                .select('*')
-                .order('created_at', { ascending: false });
+
+            const {
+                data: {
+                    session
+                }
+            } =
+                await supabaseClient.auth.getSession();
+
+
+            if (!session) {
+
+                historyListElem.innerHTML =
+                    `
+                    <p class="text-xs font-medium text-slate-500">
+                        Sign in to view invoice archives.
+                    </p>
+                    `;
+
+
+                if (statsContainer) {
+
+                    statsContainer.classList.add(
+                        'hidden'
+                    );
+
+                }
+
+                return;
+
+            }
+
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                    .from('invoices')
+                    .select('*')
+                    .order(
+                        'created_at',
+                        {
+                            ascending: false
+                        }
+                    );
+
 
             if (error) {
-                historyListElem.innerHTML = `<p class="text-xs font-medium text-red-400">Failed loading records.</p>`;
+
+                historyListElem.innerHTML =
+                    `
+                    <p class="text-xs font-medium text-red-400">
+                        Failed loading records.
+                    </p>
+                    `;
+
+                console.error(
+                    'History loading error:',
+                    error
+                );
+
                 return;
+
             }
 
-            if (!data || data.length === 0) {
-                historyListElem.innerHTML = `<p class="text-xs font-medium text-slate-500">No invoices generated yet.</p>`;
-                if(statsContainer) statsContainer.classList.add('hidden');
+
+            if (
+                !data ||
+                data.length === 0
+            ) {
+
+                historyListElem.innerHTML =
+                    `
+                    <p class="text-xs font-medium text-slate-500">
+                        No invoices generated yet.
+                    </p>
+                    `;
+
+
+                if (statsContainer) {
+
+                    statsContainer.classList.add(
+                        'hidden'
+                    );
+
+                }
+
                 return;
+
             }
+
 
             let totalEarnings = 0;
-            data.forEach(inv => {
-                totalEarnings += Number(inv.total_amount) || 0;
-            });
 
-            if(totalCountElem) totalCountElem.innerText = data.length;
-            if(totalEarningsElem) totalEarningsElem.innerText = '$' + totalEarnings.toLocaleString();
-            if(statsContainer) statsContainer.classList.remove('hidden');
+
+            data.forEach(
+                inv => {
+
+                    totalEarnings +=
+                        Number(
+                            inv.total_amount
+                        ) || 0;
+
+                }
+            );
+
+
+            if (totalCountElem) {
+
+                totalCountElem.innerText =
+                    data.length;
+
+            }
+
+
+            if (totalEarningsElem) {
+
+                totalEarningsElem.innerText =
+                    '$' +
+                    totalEarnings.toLocaleString();
+
+            }
+
+
+            if (statsContainer) {
+
+                statsContainer.classList.remove(
+                    'hidden'
+                );
+
+            }
+
 
             let html = '';
-            data.forEach((inv) => {
-                const dateStr = new Date(inv.created_at).toLocaleDateString();
-                const symbol = getCurrencySymbol(inv.country_policy);
-                
-                html += `
-                    <div onclick="viewInvoiceDetail('${inv.client_name}', '${inv.project_name}', ${inv.total_amount}, ${inv.base_amount}, ${inv.tax_amount}, '${inv.country_policy}', '${dateStr}')" 
-                         class="p-3.5 border border-slate-800 rounded-xl flex justify-between items-center bg-slate-950/40 hover:bg-slate-800/50 hover:border-slate-700 transition cursor-pointer">
-                        <div>
-                            <p class="text-xs font-bold text-white">${inv.client_name} - <span class="text-indigo-400">${inv.project_name}</span></p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">${dateStr} | Policy: ${inv.country_policy}</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="text-right">
-                                <p class="text-xs font-black text-white">${symbol}${inv.total_amount.toLocaleString()}</p>
-                                <span class="text-[10px] text-indigo-400 font-bold hover:underline">Inspect</span>
+
+
+            data.forEach(
+                inv => {
+
+                    const dateStr =
+                        new Date(
+                            inv.created_at
+                        ).toLocaleDateString();
+
+
+                    const symbol =
+                        getCurrencySymbol(
+                            inv.country_policy
+                        );
+
+
+                    html += `
+                        <div
+                            onclick="viewInvoiceDetail(
+                                '${escapeHtml(inv.client_name)}',
+                                '${escapeHtml(inv.project_name)}',
+                                ${Number(inv.total_amount)},
+                                ${Number(inv.base_amount)},
+                                ${Number(inv.tax_amount)},
+                                '${inv.country_policy}',
+                                '${dateStr}'
+                            )"
+                            class="p-3.5 border border-slate-800 rounded-xl flex justify-between items-center bg-slate-950/40 hover:bg-slate-800/50 hover:border-slate-700 transition cursor-pointer">
+
+                            <div>
+
+                                <p class="text-xs font-bold text-white">
+                                    ${escapeHtml(inv.client_name)}
+                                    -
+                                    <span class="text-indigo-400">
+                                        ${escapeHtml(inv.project_name)}
+                                    </span>
+                                </p>
+
+                                <p class="text-[10px] text-slate-500 mt-0.5">
+                                    ${dateStr}
+                                    |
+                                    Policy:
+                                    ${inv.country_policy}
+                                </p>
+
                             </div>
-                            <button onclick="deleteInvoice(event, '${inv.id}')" class="text-slate-600 hover:text-red-400 p-1 text-xs font-bold rounded cursor-pointer" title="Remove">✕</button>
+
+                            <div class="flex items-center gap-3">
+
+                                <div class="text-right">
+
+                                    <p class="text-xs font-black text-white">
+                                        ${symbol}${Number(inv.total_amount).toLocaleString()}
+                                    </p>
+
+                                    <span class="text-[10px] text-indigo-400 font-bold hover:underline">
+                                        Inspect
+                                    </span>
+
+                                </div>
+
+                                <button
+                                    onclick="deleteInvoice(event, '${inv.id}')"
+                                    class="text-slate-600 hover:text-red-400 p-1 text-xs font-bold rounded cursor-pointer"
+                                    title="Remove">
+                                    ✕
+                                </button>
+
+                            </div>
+
                         </div>
-                    </div>
-                `;
-            });
-            historyListElem.innerHTML = html;
+                    `;
+
+                }
+            );
+
+
+            historyListElem.innerHTML =
+                html;
+
         }
 
-        window.viewInvoiceDetail = function(client, project, totalAmount, baseAmount, taxAmount, countryVal, dateStr) {
-            let taxName = "Tax (0%)";
-            let policyNote = "Cross-Border B2B Export: 0% Tax under international remote compliance rules.";
-            let countryText = "US Client - B2B Export";
 
-            if(countryVal === 'UK') {
-                taxName = "VAT (20%)";
-                policyNote = "UK VAT-inclusive standard compliance policy applied.";
-                countryText = "UK Client - Standard VAT";
-            } else if(countryVal === 'EU') {
-                taxName = "VAT / Reverse Charge (19%)";
-                policyNote = "EU B2B Reverse Charge mechanism compliance applied.";
-                countryText = "EU Client - Reverse Charge";
-            } else if(countryVal === 'PK') {
-                taxName = "Services GST (16%)";
-                policyNote = "FBR standard domestic services tax-inclusive policy applied.";
-                countryText = "Pakistan Domestic Services";
-            } else if(countryVal === 'OTHER') {
-                taxName = "Standard Tax (5%)";
-                policyNote = "Rest of World local compliance tax policy applied.";
-                countryText = "Global Rest of World";
-            }
+        /* =========================================================
+           BASIC HTML ESCAPE
+        ========================================================= */
 
-            const symbol = getCurrencySymbol(countryVal);
-            renderInvoiceView(client, project, totalAmount, baseAmount, taxAmount, taxName, policyNote, countryText, symbol, dateStr);
-            window.print();
-        };
+        function escapeHtml(value) {
+
+            return String(value ?? '')
+                .replace(
+                    /&/g,
+                    '&amp;'
+                )
+                .replace(
+                    /</g,
+                    '&lt;'
+                )
+                .replace(
+                    />/g,
+                    '&gt;'
+                )
+                .replace(
+                    /"/g,
+                    '&quot;'
+                )
+                .replace(
+                    /'/g,
+                    '&#039;'
+                );
+
+        }
+
+
+        /* =========================================================
+           VIEW EXISTING INVOICE
+        ========================================================= */
+
+        window.viewInvoiceDetail =
+            function (
+                client,
+                project,
+                totalAmount,
+                baseAmount,
+                taxAmount,
+                countryVal,
+                dateStr
+            ) {
+
+                let taxName =
+                    "Tax (0%)";
+
+                let policyNote =
+                    "Cross-Border B2B Export: 0% Tax under international remote compliance rules.";
+
+                let countryText =
+                    "US Client - B2B Export";
+
+
+                if (countryVal === 'UK') {
+
+                    taxName =
+                        "VAT (20%)";
+
+                    policyNote =
+                        "UK VAT-inclusive standard compliance policy applied.";
+
+                    countryText =
+                        "UK Client - Standard VAT";
+
+                }
+
+
+                else if (
+                    countryVal === 'EU'
+                ) {
+
+                    taxName =
+                        "VAT / Reverse Charge (19%)";
+
+                    policyNote =
+                        "EU B2B Reverse Charge mechanism compliance applied.";
+
+                    countryText =
+                        "EU Client - Reverse Charge";
+
+                }
+
+
+                else if (
+                    countryVal === 'PK'
+                ) {
+
+                    taxName =
+                        "Services GST (16%)";
+
+                    policyNote =
+                        "FBR standard domestic services tax-inclusive policy applied.";
+
+                    countryText =
+                        "Pakistan Domestic Services";
+
+                }
+
+
+                else if (
+                    countryVal === 'OTHER'
+                ) {
+
+                    taxName =
+                        "Standard Tax (5%)";
+
+                    policyNote =
+                        "Rest of World local compliance tax policy applied.";
+
+                    countryText =
+                        "Global Rest of World";
+
+                }
+
+
+                const symbol =
+                    getCurrencySymbol(
+                        countryVal
+                    );
+
+
+                renderInvoiceView(
+                    client,
+                    project,
+                    Number(totalAmount),
+                    Number(baseAmount),
+                    Number(taxAmount),
+                    taxName,
+                    policyNote,
+                    countryText,
+                    symbol,
+                    dateStr
+                );
+
+
+                window.print();
+
+            };
+
+
+        /* =========================================================
+           USER SESSION
+        ========================================================= */
 
         async function checkUserSession() {
-            if(!supabaseClient) return;
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if(session && session.user) {
-                    const userEmailElem = document.getElementById('user-email');
-                    const authNavElem = document.getElementById('auth-nav');
-                    if(userEmailElem) userEmailElem.innerText = session.user.email;
-                    if(authNavElem) {
-                        authNavElem.innerHTML = `<span class="text-xs font-bold text-indigo-400 mr-3">${session.user.email}</span> <button id="logout-btn" type="button" class="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer px-2 py-1">Logout</button>`;
-                        const logoutBtn = document.getElementById('logout-btn');
-                        if(logoutBtn) {
-                            logoutBtn.addEventListener('click', async () => {
-                                await supabaseClient.auth.signOut();
-                                window.location.reload();
-                            });
-                        }
-                    }
-                    loadInvoiceHistory();
-                }
-            } catch(err) {
-                console.error("Session fetch error:", err);
+
+            if (!supabaseClient) {
+
+                return;
+
             }
+
+
+            try {
+
+                const {
+                    data: {
+                        session
+                    }
+                } =
+                    await supabaseClient.auth.getSession();
+
+
+                if (
+                    session &&
+                    session.user
+                ) {
+
+                    const userEmailElem =
+                        document.getElementById(
+                            'user-email'
+                        );
+
+                    const authNavElem =
+                        document.getElementById(
+                            'auth-nav'
+                        );
+
+
+                    if (userEmailElem) {
+
+                        userEmailElem.innerText =
+                            session.user.email;
+
+                    }
+
+
+                    if (authNavElem) {
+
+                        authNavElem.innerHTML =
+                            `
+                            <span class="text-xs font-bold text-indigo-400 mr-3">
+                                ${escapeHtml(session.user.email)}
+                            </span>
+
+                            <button
+                                id="logout-btn"
+                                type="button"
+                                class="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer px-2 py-1">
+                                Logout
+                            </button>
+                            `;
+
+
+                        const logoutBtn =
+                            document.getElementById(
+                                'logout-btn'
+                            );
+
+
+                        if (logoutBtn) {
+
+                            logoutBtn.addEventListener(
+                                'click',
+                                async () => {
+
+                                    await supabaseClient.auth.signOut();
+
+                                    window.location.reload();
+
+                                }
+                            );
+
+                        }
+
+                    }
+
+
+                    loadInvoiceHistory();
+
+                }
+
+            } catch (err) {
+
+                console.error(
+                    "Session fetch error:",
+                    err
+                );
+
+            }
+
         }
+
 
         checkUserSession();
 
-        function prepareInvoiceDataAndRender() {
-            const countrySelect = document.getElementById('country');
-            const countryVal = countrySelect.value;
-            const countryText = countrySelect.options[countrySelect.selectedIndex].text;
-            const client = document.getElementById('clientName').value;
-            const project = document.getElementById('projectName').value;
-            const totalAmount = parseFloat(document.getElementById('amount').value);
 
-            if(!client || !project || isNaN(totalAmount)) {
-                alert('Please complete all form inputs properly.');
+        /* =========================================================
+           PREPARE INVOICE DATA
+        ========================================================= */
+
+        function prepareInvoiceDataAndRender() {
+
+            const countrySelect =
+                document.getElementById(
+                    'country'
+                );
+
+
+            const countryVal =
+                countrySelect.value;
+
+
+            const countryText =
+                countrySelect.options[
+                    countrySelect.selectedIndex
+                ].text;
+
+
+            const client =
+                document.getElementById(
+                    'clientName'
+                ).value.trim();
+
+
+            const project =
+                document.getElementById(
+                    'projectName'
+                ).value.trim();
+
+
+            const totalAmount =
+                parseFloat(
+                    document.getElementById(
+                        'amount'
+                    ).value
+                );
+
+
+            if (
+                !client ||
+                !project ||
+                isNaN(totalAmount) ||
+                totalAmount <= 0
+            ) {
+
+                alert(
+                    'Please complete all form inputs properly.'
+                );
+
                 return null;
+
             }
+
 
             let taxRate = 0;
-            let taxName = "Tax (0%)";
-            let policyNote = "Cross-Border B2B Export: 0% Tax under international remote compliance rules.";
 
-            if(countryVal === 'UK') {
+            let taxName =
+                "Tax (0%)";
+
+            let policyNote =
+                "Cross-Border B2B Export: 0% Tax under international remote compliance rules.";
+
+
+            if (countryVal === 'UK') {
+
                 taxRate = 0.20;
-                taxName = "VAT (20%)";
-                policyNote = "UK VAT-inclusive standard compliance policy applied.";
-            } else if(countryVal === 'EU') {
+
+                taxName =
+                    "VAT (20%)";
+
+                policyNote =
+                    "UK VAT-inclusive standard compliance policy applied.";
+
+            }
+
+
+            else if (
+                countryVal === 'EU'
+            ) {
+
                 taxRate = 0.19;
-                taxName = "VAT / Reverse Charge (19%)";
-                policyNote = "EU B2B Reverse Charge mechanism compliance applied.";
-            } else if(countryVal === 'PK') {
+
+                taxName =
+                    "VAT / Reverse Charge (19%)";
+
+                policyNote =
+                    "EU B2B Reverse Charge mechanism compliance applied.";
+
+            }
+
+
+            else if (
+                countryVal === 'PK'
+            ) {
+
                 taxRate = 0.16;
-                taxName = "Services GST (16%)";
-                policyNote = "FBR standard domestic services tax-inclusive policy applied.";
-            } else if(countryVal === 'OTHER') {
+
+                taxName =
+                    "Services GST (16%)";
+
+                policyNote =
+                    "FBR standard domestic services tax-inclusive policy applied.";
+
+            }
+
+
+            else if (
+                countryVal === 'OTHER'
+            ) {
+
                 taxRate = 0.05;
-                taxName = "Standard Tax (5%)";
-                policyNote = "Rest of World local compliance tax policy applied.";
+
+                taxName =
+                    "Standard Tax (5%)";
+
+                policyNote =
+                    "Rest of World local compliance tax policy applied.";
+
             }
 
-            let baseAmount, taxAmount;
-            if(taxRate > 0) {
-                baseAmount = totalAmount / (1 + taxRate);
-                taxAmount = totalAmount - baseAmount;
+
+            let baseAmount;
+
+            let taxAmount;
+
+
+            if (taxRate > 0) {
+
+                baseAmount =
+                    totalAmount /
+                    (1 + taxRate);
+
+                taxAmount =
+                    totalAmount -
+                    baseAmount;
+
             } else {
-                baseAmount = totalAmount;
-                taxAmount = 0;
+
+                baseAmount =
+                    totalAmount;
+
+                taxAmount =
+                    0;
+
             }
 
-            const symbol = getCurrencySymbol(countryVal);
-            renderInvoiceView(client, project, totalAmount, baseAmount, taxAmount, taxName, policyNote, countryText, symbol);
-            
-            return { client, project, countryVal, totalAmount, baseAmount, taxAmount };
+
+            const symbol =
+                getCurrencySymbol(
+                    countryVal
+                );
+
+
+            let countryDisplay =
+                countryText;
+
+
+            if (
+                countryVal === 'US'
+            ) {
+
+                countryDisplay =
+                    "US Client - B2B Export";
+
+            }
+
+            else if (
+                countryVal === 'UK'
+            ) {
+
+                countryDisplay =
+                    "UK Client - Standard VAT";
+
+            }
+
+            else if (
+                countryVal === 'EU'
+            ) {
+
+                countryDisplay =
+                    "EU Client - Reverse Charge";
+
+            }
+
+            else if (
+                countryVal === 'PK'
+            ) {
+
+                countryDisplay =
+                    "Pakistan Domestic Services";
+
+            }
+
+            else if (
+                countryVal === 'OTHER'
+            ) {
+
+                countryDisplay =
+                    "Global Rest of World";
+
+            }
+
+
+            renderInvoiceView(
+                client,
+                project,
+                totalAmount,
+                baseAmount,
+                taxAmount,
+                taxName,
+                policyNote,
+                countryDisplay,
+                symbol,
+                new Date().toLocaleDateString()
+            );
+
+
+            return {
+
+                client,
+
+                project,
+
+                countryVal,
+
+                totalAmount,
+
+                baseAmount,
+
+                taxAmount
+
+            };
+
         }
 
-        if(generateInvoiceBtn) {
-            generateInvoiceBtn.addEventListener('click', async () => {
-                const invData = prepareInvoiceDataAndRender();
-                if(!invData) return;
 
-                if (supabaseClient) {
-                    try {
-                        const { data: { session } } = await supabaseClient.auth.getSession();
-                        if (session && session.user) {
-                            await supabaseClient.from('invoices').insert([
-                                {
-                                    user_id: session.user.id,
-                                    client_name: invData.client,
-                                    project_name: invData.project,
-                                    country_policy: invData.countryVal,
-                                    total_amount: invData.totalAmount,
-                                    base_amount: invData.baseAmount,
-                                    tax_amount: invData.taxAmount
-                                }
-                            ]);
-                            loadInvoiceHistory();
-                        }
-                    } catch (dbErr) {
-                        console.error("Cloud storage error:", dbErr);
+        /* =========================================================
+           SAVE + GENERATE
+        ========================================================= */
+
+        if (generateInvoiceBtn) {
+
+            generateInvoiceBtn.addEventListener(
+                'click',
+                async () => {
+
+                    const invData =
+                        prepareInvoiceDataAndRender();
+
+
+                    if (!invData) {
+
+                        return;
+
                     }
-                }
 
-                window.print();
-            });
+
+                    if (supabaseClient) {
+
+                        try {
+
+                            const {
+                                data: {
+                                    session
+                                }
+                            } =
+                                await supabaseClient.auth.getSession();
+
+
+                            if (
+                                session &&
+                                session.user
+                            ) {
+
+                                const {
+                                    error
+                                } =
+                                    await supabaseClient
+                                        .from('invoices')
+                                        .insert([
+                                            {
+                                                user_id:
+                                                    session.user.id,
+
+                                                client_name:
+                                                    invData.client,
+
+                                                project_name:
+                                                    invData.project,
+
+                                                country_policy:
+                                                    invData.countryVal,
+
+                                                total_amount:
+                                                    invData.totalAmount,
+
+                                                base_amount:
+                                                    invData.baseAmount,
+
+                                                tax_amount:
+                                                    invData.taxAmount
+                                            }
+                                        ]);
+
+
+                                if (error) {
+
+                                    console.error(
+                                        "Database save error:",
+                                        error
+                                    );
+
+                                } else {
+
+                                    loadInvoiceHistory();
+
+                                }
+
+                            }
+
+                        } catch (dbErr) {
+
+                            console.error(
+                                "Cloud storage error:",
+                                dbErr
+                            );
+
+                        }
+
+                    }
+
+
+                    /*
+                        Existing behavior:
+                        Save & Generate -> Print dialog
+                    */
+
+                    window.print();
+
+                }
+            );
+
         }
+
+
+        /* =========================================================
+           SUPABASE AUTH STATE LISTENER
+        ========================================================= */
+
+        if (supabaseClient) {
+
+            supabaseClient.auth.onAuthStateChange(
+                (event, session) => {
+
+                    if (session) {
+
+                        loadInvoiceHistory();
+
+                    }
+
+                }
+            );
+
+        }
+
     </script>
+
 </body>
 </html>
