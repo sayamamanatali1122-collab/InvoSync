@@ -1,3 +1,15 @@
+Aapka **Export PDF** button incomplete/cut-off PDF is wajah se generate kar raha tha kyunki `html2pdf()` run hone se pehle DOM container (`#invoice-print-area`) hidden tha (`display: none`). Jab code `hidden` class remove karke فوراً `html2pdf()` call karta tha, toh browser layout fully compute/render nahi kar pata tha.
+
+### 🛠️ Key Fixes Applied:
+1. **Asynchronous Layout Render Wait**: PDF generation se pehle element ko temporarily visible karke exact 350ms delay diya gaya taaki browser full layout, text styling aur dimensions draw kar le.
+2. **Optimized html2canvas & jsPDF Configuration**: `scale: 2` (high resolution quality), exact `windowWidth: 800`, zero scroll offset, aur proper A4 margins (`[8, 8, 8, 8]`) set kiye gaye.
+3. **Loading Feedback & Cleanup**: PDF export ke waqt button par `"Generating PDF..."` state show hoti hai aur PDF save hone ke baad element safely dobara hide ho jata hai.
+
+---
+
+### 📄 Complete & Fixed Source Code
+
+```html
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -18,12 +30,11 @@
         }
         .animate-float { animation: float 4s ease-in-out infinite; }
         
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.96) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes fadeInMap { 
+            from { opacity: 0; transform: translateY(6px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
         .animate-fade-in { animation: fadeInMap 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeInMap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
@@ -115,7 +126,7 @@
 
                 <div class="flex gap-3 pt-3">
                     <button id="generate-invoice-btn" type="button" class="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3.5 px-4 rounded-xl hover:opacity-95 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-indigo-600/30 cursor-pointer text-center text-sm flex items-center justify-center space-x-2">
-                        <span>Save & Generate Invoice</span>
+                        <span>Save & Print Invoice</span>
                     </button>
                     <button id="download-pdf-btn" type="button" class="bg-slate-800 text-slate-200 px-5 py-3.5 rounded-xl font-bold hover:bg-slate-700 transition cursor-pointer text-sm border border-slate-700">
                         Export PDF
@@ -318,30 +329,72 @@
             document.getElementById('inv-policy-note').innerText = policyNote;
         }
 
-        function downloadPDFInvoice() {
-            const element = document.getElementById('invoice-print-area');
-            element.classList.remove('hidden');
+        /* FIXED: Robust PDF Export Logic */
+        async function downloadPDFInvoice() {
+            const invData = prepareInvoiceDataAndRender();
+            if (!invData) return;
+
+            const downloadBtn = document.getElementById('download-pdf-btn');
+            const originalBtnText = downloadBtn ? downloadBtn.innerText : 'Export PDF';
             
+            if (downloadBtn) {
+                downloadBtn.innerText = 'Generating PDF...';
+                downloadBtn.disabled = true;
+            }
+
+            const element = document.getElementById('invoice-print-area');
+            
+            // Make element cleanly visible for html2canvas capture
+            element.classList.remove('hidden');
+            element.classList.remove('print:block');
+            element.style.display = 'block';
+            element.style.position = 'relative';
+            element.style.backgroundColor = '#ffffff';
+            element.style.color = '#0f172a';
+
+            // Wait 350ms to ensure browser finishes full layout paint
+            await new Promise(resolve => setTimeout(resolve, 350));
+
+            const sanitizedClient = (invData.client || 'Invoice').replace(/[^a-z0-9]/gi, '_');
+            const filename = `InvoSync_${sanitizedClient}_${Date.now()}.pdf`;
+
             const opt = {
-                margin:       10,
-                filename:     'InvoSync-Compliance-Invoice.pdf',
+                margin:       [8, 8, 8, 8],
+                filename:     filename,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    logging: false,
+                    scrollY: 0,
+                    windowWidth: 800
+                },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().from(element).set(opt).save().then(() => {
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } catch (err) {
+                console.error("PDF generation error:", err);
+                alert("Failed to export PDF. Please try again.");
+            } finally {
+                // Restore element visibility state
+                element.style.display = '';
+                element.style.position = '';
+                element.style.backgroundColor = '';
+                element.style.color = '';
+                element.classList.add('print:block');
                 element.classList.add('hidden');
-            });
+
+                if (downloadBtn) {
+                    downloadBtn.innerText = originalBtnText;
+                    downloadBtn.disabled = false;
+                }
+            }
         }
 
         if(downloadPdfBtn) {
-            downloadPdfBtn.addEventListener('click', () => {
-                const invData = prepareInvoiceDataAndRender();
-                if(invData) {
-                    downloadPDFInvoice();
-                }
-            });
+            downloadPdfBtn.addEventListener('click', downloadPDFInvoice);
         }
 
         window.deleteInvoice = async function(event, id) {
@@ -559,3 +612,4 @@
     </script>
 </body>
 </html>
+```
