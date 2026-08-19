@@ -322,17 +322,20 @@
             const element = document.getElementById('invoice-print-area');
             element.classList.remove('hidden');
             
-            const opt = {
-                margin:       10,
-                filename:     'InvoSync-Compliance-Invoice.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            // Chhota sa delay add kiya hai taake DOM theek se render ho jaye aur blank PDF na aaye
+            setTimeout(() => {
+                const opt = {
+                    margin:       10,
+                    filename:     'InvoSync-Compliance-Invoice.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
 
-            html2pdf().from(element).set(opt).save().then(() => {
-                element.classList.add('hidden');
-            });
+                html2pdf().from(element).set(opt).save().then(() => {
+                    element.classList.add('hidden');
+                });
+            }, 300);
         }
 
         if(downloadPdfBtn) {
